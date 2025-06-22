@@ -9,6 +9,11 @@ export const validate =
       schema.parse(req.body);
       next();
     } catch (err: any) {
-      next(ApiError.badRequest(err.errors?.[0]?.message || "Geçersiz veri"));
+      const path = err.errors?.[0]?.path?.join('.') || '';
+      next(ApiError.badRequest(
+        path
+          ? `${path} field is ${err.errors?.[0]?.message}`
+          : err.errors?.[0]?.message || "Geçersiz veri"
+      ));
     }
   };
