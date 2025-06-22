@@ -39,6 +39,7 @@ export class UserRepository {
         {
             id: users.id,
             username: users.username,
+            password: users.password,
             email: users.email,
             isVerified: users.isVerified,
         }

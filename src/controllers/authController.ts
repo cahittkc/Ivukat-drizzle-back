@@ -1,6 +1,6 @@
 import { Request ,Response , NextFunction } from "express";
 import { AuthService } from "../services/authService";
-import { RegisterDto } from "../DTOs/authDto";
+import { LoginDto, RegisterDto } from "../DTOs/authDto";
 import { successResponse } from "../utils/responseHandler";
 import { StatusCodes } from 'http-status-codes';
 import { ApiError } from "../utils/ApiError";
@@ -17,6 +17,18 @@ export class AuthController{
         const sanitizedUser = { ...user };
         delete sanitizedUser.password; // Remove password from the response
         return sanitizedUser;
+    }
+
+
+    login = async (req: Request, res: Response, next : NextFunction) => {
+        try {
+            const userData = req.body as LoginDto
+            const result = await this.authService.login(userData)
+            const sanitizedUser = this.sanitizeUser(result);
+            successResponse(res,sanitizedUser, 'User login successfully', StatusCodes.OK)
+        } catch (error) {
+            next(error);
+        }
     }
 
 
