@@ -5,17 +5,25 @@ import { ApiError } from "../utils/ApiError";
 import bcrypt from "bcryptjs";
 import { JWT_SECRET, jwtOptions, refreshTokenOptions, JWT_EXPIRES_IN, REFRESH_TOKEN_EXPIRES_IN, REFRESH_TOKEN_SECRET } from "../utils/auth";
 import jwt from "jsonwebtoken";
-import { type InferSelectModel } from "drizzle-orm";
+import { InferSelectModel } from "drizzle-orm";
 import { users } from "../db/user";
+import { refresh_tokens } from "../db/refresh_token";
+import { randomUUID } from 'crypto';
+import { RefreshTokenRepository } from "../repositories/refreshTokenRepository";
+import { Request} from "express";
 
 // Define the User type using drizzle-orm's InferSelectModel
 export type User = InferSelectModel<typeof users>;
 
+
 export class AuthService {
     private userRepository : UserRepository
+    private refreshTokenRepository : RefreshTokenRepository
 
     constructor(){
         this.userRepository = new UserRepository(db);
+        this.refreshTokenRepository = new RefreshTokenRepository(db);
+
     }
 
 
@@ -41,7 +49,7 @@ export class AuthService {
         return user;
     }
 
-    async login(data :LoginDto){
+    async login(data :LoginDto, req : Request){
         const user = await this.userRepository.findByUsername(data.username)
         if(!user){
             throw ApiError.badRequest('Username not found')
@@ -52,21 +60,27 @@ export class AuthService {
             throw ApiError.badRequest('Password not match')
         }
 
-        const accessToken = this.generateAccessToken(user);
+        const sessionId = randomUUID();
+
+        const accessToken = this.generateAccessToken(user,sessionId);
         const refreshToken = this.generateRefreshToken(user);
-
         const expiresInSeconds = this.parseExpiresIn(JWT_EXPIRES_IN);
-
-
         const expiresIn = Date.now() + (expiresInSeconds * 1000); // Saniyeyi milisaniyeye çevirip şimdiki zamana ekliyoruz
-
         const expiresAt = new Date();
         expiresAt.setDate(expiresAt.getDate() + 7);
+
+
+        await this.refreshTokenRepository.create({
+            token : refreshToken,
+            userId : user.id,
+            expiresAt : expiresAt,
+            ipAdress : req.ip,
+            deviceInfo : req.headers['user-agent'] ? req.headers['user-agent'] : null
+        })
 
         const fullUser = {
             ...user,
             accessToken,
-            refreshToken,
             expiresIn
         }
 
@@ -74,7 +88,7 @@ export class AuthService {
         return fullUser;
     }
 
-    private generateAccessToken(user: User): string {
+    private generateAccessToken(user: User, sessionId : string): string {
         // Kullanıcının ve rolünün varlığını kontrol et
         if (!user) {
             // Hata durumunu loglayabilir veya farklı bir işlem yapabilirsiniz
@@ -86,6 +100,7 @@ export class AuthService {
             id: user.id,
             email: user.email,
             username: user.username,
+            sessionId
         };
 
         return jwt.sign(payload, JWT_SECRET, jwtOptions);

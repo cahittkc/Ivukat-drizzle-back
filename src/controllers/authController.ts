@@ -23,7 +23,7 @@ export class AuthController{
     login = async (req: Request, res: Response, next : NextFunction) => {
         try {
             const userData = req.body as LoginDto
-            const result = await this.authService.login(userData)
+            const result = await this.authService.login(userData,req)
             const sanitizedUser = this.sanitizeUser(result);
             successResponse(res,sanitizedUser, 'User login successfully', StatusCodes.OK)
         } catch (error) {
