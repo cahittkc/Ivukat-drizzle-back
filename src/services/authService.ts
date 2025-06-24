@@ -73,7 +73,9 @@ export class AuthService {
         await this.refreshTokenRepository.create({
             token : refreshToken,
             userId : user.id,
+            sessionId : sessionId,
             expiresAt : expiresAt,
+            isValid : true,
             ipAdress : req.ip,
             deviceInfo : req.headers['user-agent'] ? req.headers['user-agent'] : null
         })
@@ -88,10 +90,69 @@ export class AuthService {
         return fullUser;
     }
 
+    async refreshToken(token : string, req : Request){
+        const decodedToken = jwt.verify(token, JWT_SECRET) as { sessionId : string };
+        if(!decodedToken){
+            throw ApiError.unauthorized('Invalid token 1');
+        }
+        console.log("decoded token" , decodedToken);
+        
+        const foundedToken = await this.refreshTokenRepository.findBySessionId(decodedToken.sessionId);
+
+        console.log("foundedToken", foundedToken);
+        
+        if(!foundedToken || !foundedToken.isValid || new Date(foundedToken.expiresAt) < new Date()){
+            throw ApiError.unauthorized('Invalid token 2');
+        }
+        
+        const user = await this.userRepository.findById(foundedToken.userId);
+        if(!user){
+            throw ApiError.unauthorized('Invalid token 3');
+        }
+
+        const sessionId = randomUUID();
+
+        const newAccessToken = this.generateAccessToken(user, sessionId);
+        const newRefreshToken = this.generateRefreshToken(user);
+        const expiresInSeconds = this.parseExpiresIn(JWT_EXPIRES_IN);
+        const expiresIn = Date.now() + (expiresInSeconds * 1000); // Saniyeyi milisaniyeye çevirip şimdiki zamana ekliyoruz
+        const expiresAt = new Date();
+        expiresAt.setDate(expiresAt.getDate() + 7);
+
+        await this.refreshTokenRepository.invalidateSession(foundedToken.sessionId);
+        await this.refreshTokenRepository.create({
+            token : newRefreshToken,
+            userId : user.id,
+            sessionId : sessionId,
+            expiresAt : expiresAt,
+            ipAdress : req.ip,
+            isValid : true,
+            deviceInfo : req.headers['user-agent'] ? req.headers['user-agent'] : null
+        })
+        
+        return {
+            accessToken : newAccessToken,
+            expiresIn : expiresIn,
+        }
+        
+    }
+
+
+    async logout(token : string){
+        const decodedToken = jwt.verify(token, JWT_SECRET) as { sessionId : string };
+        if(!decodedToken){
+            throw ApiError.unauthorized('Invalid token');
+        }
+        const refreshToken = await this.refreshTokenRepository.findBySessionId(decodedToken.sessionId);
+        if(!refreshToken){
+            throw ApiError.unauthorized('Invalid token');
+        }
+        await this.refreshTokenRepository.invalidateSession(refreshToken.sessionId);
+    }
+    
+
     private generateAccessToken(user: User, sessionId : string): string {
-        // Kullanıcının ve rolünün varlığını kontrol et
         if (!user) {
-            // Hata durumunu loglayabilir veya farklı bir işlem yapabilirsiniz
             console.error("Error: User or user role is undefined for access token generation.", user);
             throw new Error("Cannot generate access token: User or role information is missing.");
         }

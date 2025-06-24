@@ -79,4 +79,32 @@ export class AuthController{
             }
         }
     }
+
+    refreshToken = async (req: Request, res: Response, next : NextFunction) => {
+        try {
+            const token = req.headers['authorization']?.split(' ')[1];
+            console.log("------------------------------------------------------------");
+            console.log("token",token);
+            if(!token){
+                throw ApiError.unauthorized('Invalid token');
+            }
+            const result = await this.authService.refreshToken(token, req);
+            successResponse(res, result, 'Refresh token successfully', StatusCodes.OK);
+        } catch (error) {
+            next(error);
+        }
+    }
+
+    logout = async (req: Request, res: Response, next : NextFunction) => {
+        try {
+            const token = req.headers['authorization']?.split(' ')[1];
+            if(!token){
+                throw ApiError.unauthorized('Invalid token');
+            }
+            await this.authService.logout(token);
+            successResponse(res, null, 'Logout successfully', StatusCodes.OK);
+        } catch (error) {
+            next(error);
+        }
+    }
 }
