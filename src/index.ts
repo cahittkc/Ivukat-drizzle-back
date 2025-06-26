@@ -6,6 +6,7 @@ import { logger } from "./middlewares/logger";
 import { errorHandler } from "./middlewares/errorHandler";
 import userRoutes from "./routes/userRoutes";
 import authRoutes from "./routes/authRoutes"
+import judgmentTypeRoutes from "./routes/judgmentTypeRoutes"
 import { pgTable, serial, text, varchar } from "drizzle-orm/pg-core";
 import { drizzle } from "drizzle-orm/node-postgres";
 import { Pool } from "pg";
@@ -39,7 +40,8 @@ app.get("/", (req, res) => {
 });
 
 app.use("/api/users", userRoutes);
-app.use("/api/auth", authRoutes)
+app.use("/api/auth", authRoutes);
+app.use("/api/judgment-types", judgmentTypeRoutes)
 
 app.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);
