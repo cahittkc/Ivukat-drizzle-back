@@ -7,6 +7,7 @@ import { errorHandler } from "./middlewares/errorHandler";
 import userRoutes from "./routes/userRoutes";
 import authRoutes from "./routes/authRoutes"
 import judgmentTypeRoutes from "./routes/judgmentTypeRoutes"
+import customRoutes from "./routes/customRoutes"
 import { pgTable, serial, text, varchar } from "drizzle-orm/pg-core";
 import { drizzle } from "drizzle-orm/node-postgres";
 import { Pool } from "pg";
@@ -21,9 +22,24 @@ const db = drizzle(pool, { schema: { ...schemas } });
 const app = express();
 const PORT = process.env.PORT || 3000;
 
+
+const allowedOrigins = [
+  'http://localhost:5173',
+  'chrome-extension://amebehcpcgkbgmbmbkidcmfgnkkakjhh',
+  'https://avukatbeta.uyap.gov.tr'
+];
+
 // CORS configuration
 const corsOptions = {
-    origin: 'http://localhost:5173', // Frontend URL
+  origin: function (origin, callback) {
+    console.log(origin);
+    
+      if (!origin || allowedOrigins.includes(origin)) {
+        callback(null, true);
+      } else {
+        callback(new Error('Not allowed by CORS'));
+      }
+    }, // Frontend URL
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization']
@@ -42,6 +58,7 @@ app.get("/", (req, res) => {
 app.use("/api/users", userRoutes);
 app.use("/api/auth", authRoutes);
 app.use("/api/judgment-types", judgmentTypeRoutes)
+app.use("/api/customs", customRoutes)
 
 app.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);
