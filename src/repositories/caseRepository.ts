@@ -1,7 +1,6 @@
 import { eq, InferSelectModel, InferInsertModel } from "drizzle-orm";
 import {case_example} from "../db/caseExample"
 import { parties_example } from "../db/partiesExample";
-import {db} from "../db/index"
 
 
 type CaseExample = InferSelectModel<typeof case_example>

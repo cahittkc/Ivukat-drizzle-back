@@ -8,7 +8,7 @@ import userRoutes from "./routes/userRoutes";
 import authRoutes from "./routes/authRoutes"
 import judgmentTypeRoutes from "./routes/judgmentTypeRoutes"
 import customRoutes from "./routes/customRoutes"
-import { pgTable, serial, text, varchar } from "drizzle-orm/pg-core";
+import judgmentUnitRoutes from "./routes/judgmentUnitRoutes" 
 import { drizzle } from "drizzle-orm/node-postgres";
 import { Pool } from "pg";
 import * as schemas from "./db/schema"
@@ -59,6 +59,7 @@ app.use("/api/users", userRoutes);
 app.use("/api/auth", authRoutes);
 app.use("/api/judgment-types", judgmentTypeRoutes)
 app.use("/api/customs", customRoutes)
+app.use("/api/judgment-unit", judgmentUnitRoutes)
 
 app.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);
