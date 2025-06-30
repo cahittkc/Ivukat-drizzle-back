@@ -19,6 +19,7 @@ export const case_example = pgTable('case_example',
         caseStatusCode : integer('case_status_code').notNull(),
         caseTypeCode : integer('case_type_code').notNull(),
         judgmentTypeId : varchar('judgment_type_id').notNull().references(() => judgment_types.uyapId),
-        judgmentUnitUyapId : varchar('judgment_unit_uyap_id').notNull().references(() => judgment_units.uyapId)
+        judgmentUnitUyapId : varchar('judgment_unit_uyap_id').notNull().references(() => judgment_units.uyapId),
+        caseClients: text('case_clients').array().default(sql`ARRAY[]::text[]`)
     }   
 );

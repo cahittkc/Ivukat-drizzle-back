@@ -49,7 +49,7 @@ export async function addCaseWithParties(data: any) {
       throw new Error('Birim id bulunamadı');
     }
 
-    // 3. Case ekle
+    // 3. Önce case'i ekle
     const [newCase] = await trx.insert(case_example).values({
       userId: data.userId,
       court: data.mahkeme,
@@ -62,18 +62,12 @@ export async function addCaseWithParties(data: any) {
       caseStatusCode : data['dosyaDurumKod'],
       caseTypeCode : data['dosyaTurKod'],
       judgmentUnitUyapId : data['birimTuru2'],
-      judgmentTypeId : judgmetUnit.judgmentTypeUyapId
+      judgmentTypeId : judgmetUnit.judgmentTypeUyapId,
+      caseClients: [] // ilk başta boş
     }).returning();
 
-    // 4. Parties'i toplu ekle
-    const partiesToInsert = data.parties.map((party: any) => ({
-      caseNo: `${data['birimId']}_${data['esas-no']}`,
-      rol: party["rol"],
-      type: party["kisiKurum"],
-      fullName: party["adi"],
-      deputy: party["vekil"] ? party["vekil"].replace(/^\[|\]$/g, '').trim() : null
-    }));
-
+    // 4. Sonra clients'ı ekle ve id'lerini topla
+    const clientIds: string[] = [];
     for (const party of data.parties) {
       if (!party["vekil"] || party["vekil"] === "-") continue;
 
@@ -87,15 +81,23 @@ export async function addCaseWithParties(data: any) {
         
         if (normalizeTR(cleanedVekil) === normalizeTR(fullName)) {
           console.log("geldi ==>>>>");
-          
+          const clientId = crypto.randomUUID();
           await trx.insert(clients).values({
-            id: crypto.randomUUID(),
+            id: clientId,
             fullName: party["adi"],
-            caseNo: `${data['birimId']}_${data['esas-no']}`,
+            caseNo: newCase.caseNo, // Artık kesin var!
             userId : user[0].id
           });
+          clientIds.push(clientId);
         }
       }
+    }
+
+    // 5. Son olarak caseClients alanını update et
+    if (clientIds.length > 0) {
+      await trx.update(case_example)
+        .set({ caseClients: clientIds })
+        .where(eq(case_example.id, newCase.id));
     }
 
     if (data.caseInfos) {
@@ -106,7 +108,13 @@ export async function addCaseWithParties(data: any) {
       });
     }
 
-    await trx.insert(parties_example).values(partiesToInsert);
+    await trx.insert(parties_example).values(data.parties.map((party: any) => ({
+      caseNo: `${data['birimId']}_${data['esas-no']}`,
+      rol: party["rol"],
+      type: party["kisiKurum"],
+      fullName: party["adi"],
+      deputy: party["vekil"] ? party["vekil"].replace(/^\[|\]$/g, '').trim() : null
+    })));
 
     return { case: newCase };
   });
