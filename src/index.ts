@@ -9,6 +9,9 @@ import authRoutes from "./routes/authRoutes"
 import judgmentTypeRoutes from "./routes/judgmentTypeRoutes"
 import customRoutes from "./routes/customRoutes"
 import judgmentUnitRoutes from "./routes/judgmentUnitRoutes" 
+import caseRoutes from "./routes/caseRoutes"
+
+
 import { drizzle } from "drizzle-orm/node-postgres";
 import { Pool } from "pg";
 import * as schemas from "./db/schema"
@@ -25,6 +28,7 @@ const PORT = process.env.PORT || 3000;
 
 const allowedOrigins = [
   'http://localhost:5173',
+  'http://localhost:8080',
   'chrome-extension://amebehcpcgkbgmbmbkidcmfgnkkakjhh',
   'https://avukatbeta.uyap.gov.tr'
 ];
@@ -60,6 +64,7 @@ app.use("/api/auth", authRoutes);
 app.use("/api/judgment-types", judgmentTypeRoutes)
 app.use("/api/customs", customRoutes)
 app.use("/api/judgment-unit", judgmentUnitRoutes)
+app.use("/api/cases",caseRoutes)
 
 app.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);

@@ -27,15 +27,4 @@ export class CustomController{
                 next(error)
             }
         }
-
-
-        getCaseAndParties = async (req : Request, res : Response, next : NextFunction) => {
-            try {
-                const esasNo = req.body.esasNo
-                const result = await this.caseRepository.getCaseWithPartiesById(esasNo)
-                successResponse(res,result, 'case and parties retrivied', StatusCodes.OK)
-            } catch (error) {
-                next(error)
-            }
-        }
 }
