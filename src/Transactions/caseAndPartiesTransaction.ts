@@ -18,7 +18,7 @@ export async function addCaseWithParties(data: any) {
     }
 
 
-    const caseExist = await trx.select().from(case_example).where(eq(case_example.esasNo, data['esas-no']))
+    const caseExist = await trx.select().from(case_example).where(eq(case_example.caseNo, data['birimId'] + '_' + data['esas-no']))
 
     if(caseExist[0]){
        throw new Error('This case already exist.')
@@ -67,65 +67,43 @@ export async function addCaseWithParties(data: any) {
 
     // 4. Parties'i toplu ekle
     const partiesToInsert = data.parties.map((party: any) => ({
-      caseId: newCase.id,
-      esasNo: data["esas-no"],
-      rol: party["Rol"],
-      type: party["Tipi"],
-      fullName: party["Adı"],
-      deputy: party["Vekil"],
+      caseNo: `${data['birimId']}_${data['esas-no']}`,
+      rol: party["rol"],
+      type: party["kisiKurum"],
+      fullName: party["adi"],
+      deputy: party["vekil"] ? party["vekil"].replace(/^\[|\]$/g, '').trim() : null
     }));
 
     for (const party of data.parties) {
-      if (!party["Vekil"] || party["Vekil"] === "-") continue;
+      if (!party["vekil"] || party["vekil"] === "-") continue;
 
-      const vekilList = party["Vekil"].split(",").map((v: string) => v.trim());
+      const cleanVekil = party["vekil"].replace(/^\[|\]$/g, '').trim();
+      const vekilList = cleanVekil.split(",").map((v: string) => v.trim());
 
       for (const vekil of vekilList) {
-        console.log("vekil", vekil.toLowerCase());
+        // Vekil ismini temizle ve küçük harfe çevir
+        const cleanedVekil = vekil.replace(/^\[|\]$/g, '').trim();
+        console.log("vekil", cleanedVekil.toLowerCase());
         
-        if (normalizeTR(vekil) === normalizeTR(fullName)) {
+        if (normalizeTR(cleanedVekil) === normalizeTR(fullName)) {
           console.log("geldi ==>>>>");
           
           await trx.insert(clients).values({
             id: crypto.randomUUID(),
-            fullName: party["Adı"],
-            caseNo: data['dosyaId'],
+            fullName: party["adi"],
+            caseNo: `${data['birimId']}_${data['esas-no']}`,
             userId : user[0].id
           });
         }
       }
     }
 
-    if(data.caseInfos){
-      let infos = data.caseInfos
-
+    if (data.caseInfos) {
+      const infos = mapCaseInfosToDbFields(data.caseInfos, `${data['birimId']}_${data['esas-no']}`);
       await trx.insert(caseInfos).values({
-        caseNo : data.dosyaId,
-        caseJudgmentTypeId : judgmetUnit.judgmentTypeUyapId,
-        filingType: infos["Dava Açılış Türü"] || null,
-        submissionCount: infos["Başvuruya Bırakılma Sayısı"] ? Number(infos["Başvuruya Bırakılma Sayısı"]) : null,
-        submissionDate: infos["Başvuruya Bırakılma Tarihi"] && infos["Başvuruya Bırakılma Tarihi"] !== "-" ? dayjs(infos["Başvuruya Bırakılma Tarihi"], "DD/MM/YYYY").toDate() : null,
-        caseCategories: infos["Dava Türleri"] || null,
-        relatedFiles: infos["İlgili Dosyalar"] || null,
-        relatedCases: infos["İlgili Davalar"] || null,
-        relatedSeriesCases: infos["İlgili Seri Davalar"] || null,
-        mergedFiles: infos["Birleşen Dosyalar"] || null,
-        fileStatus: infos["Dosya Durumu"] || null,
-        hearingDate: infos["Duruşma Tarihi"] ? dayjs(infos["Duruşma Tarihi"], "DD/MM/YYYY HH:mm").toDate() : null,
-        discoveryDate: infos["Keşif Tarihi"] ? dayjs(infos["Keşif Tarihi"], "DD/MM/YYYY HH:mm").toDate() : null,
-        preliminaryReviewDate: infos["Ön İnceleme Tarihi"] ? dayjs(infos["Ön İnceleme Tarihi"], "DD/MM/YYYY").toDate() : null,
-        injunctionGiven: infos["YD Yapıldı"] === "Evet",
-        arrivalReason: infos["Geliş Nedeni"] || null,
-        defenseSummary: infos["Savunmanın Özeti"] || null,
-        caseNotes: infos["Davanın Notları"] || null,
-        subFileReturnDate: infos["Alt Dosya İade Tarihi"] ? dayjs(infos["Alt Dosya İade Tarihi"], "DD/MM/YYYY").toDate() : null,
-        decisionNo: infos["Karar No"] || null,
-        executionSuspended: infos["Yürütme Durdurmalı"] === "Evet",
-        caseSummary: infos["Davanın Özeti"] || null,
-        caseSubject: infos["Davanın Konusu"] || null,
-        decision: infos["Karar"] || null,
-        decisionDate: infos["Karar Tarihi"] ? dayjs(infos["Karar Tarihi"], "DD/MM/YYYY HH:mm").toDate() : null,
-      })
+        ...infos,
+        caseJudgmentTypeId: judgmetUnit.judgmentTypeUyapId,
+      });
     }
 
     await trx.insert(parties_example).values(partiesToInsert);
@@ -145,4 +123,63 @@ function normalizeTR(str: string) {
     .replace(/ü/g, 'u')
     .replace(/ö/g, 'o')
     .replace(/ç/g, 'c');
+}
+
+function mapCaseInfosToDbFields(infos: any, dosya_no :string) {
+  return {
+    // Ortak Alanlar
+    dosyaNo: dosya_no,
+    caseJudgmentTypeId: infos["caseJudgmentTypeId"] || infos["case_judgment_type_id"] || null,
+    dosyaDurumu: infos["dosyaDurumu"] || infos["Dosya Durumu"] || null,
+    durusmaTarihi: infos["durusmaTarihiStr"]
+      ? dayjs(infos["durusmaTarihiStr"], "DD/MM/YYYY HH:mm").toDate()
+      : infos["durusmaTarihi"]
+        ? dayjs(infos["durusmaTarihi"]).toDate()
+        : null,
+    kesifTarihi: infos["kesifTarihi"] ? dayjs(infos["kesifTarihi"], "DD/MM/YYYY HH:mm").toDate() : null,
+    onIncelemeTarihi: infos["onIncelemeTarihi"] ? dayjs(infos["onIncelemeTarihi"], "DD/MM/YYYY").toDate() : null,
+
+    // Hukuk Mahkemesi
+    davaAcilisTuru: infos["davaAcilisTuru"] || infos["davaAcilisTuruStr"] || null,
+    basvuruyaBirakilmaSayisi: infos["basvuruyaBirakilmaSayisi"] ? Number(infos["basvuruyaBirakilmaSayisi"]) : null,
+    basvuruyaBirakilmaTarihi: infos["basvuruyaBirakilmaTarihiStr"] ? 
+      dayjs(infos["basvuruyaBirakilmaTarihiStr"], "DD/MM/YYYY").toDate() : null,
+    davaTurleri: infos["davaTurleri"] || infos["davaTurleriStr"] || null,
+    ilgiliDosyalar: infos["ilgiliDosyaListesiStr"] || infos["ilgiliDosyalar"] || null,
+    ilgiliDavalar: infos["ilgiliDavaListesiStr"] || infos["ilgiliDavalar"] || null,
+    ilgiliSeriDavalar: infos["ilgiliSeriDavaListesiStr"] || infos["ilgiliSeriDavalar"] || null,
+    birlesenDosyalar: infos["birlesenDosyaListesiStr"] || infos["birlesenDosyalar"] || null,
+
+    // İdari Yargı
+    altDosyaIadeTarihi: infos["altDosyaIadeTarihi"] ? dayjs(infos["altDosyaIadeTarihi"], "DD/MM/YYYY").toDate() : null,
+    davaninKonusu: infos["davaninKonusu"] || infos["davaninkKonusu"] || infos["davaninkonusu"] || null,
+    davaninNotlari: infos["davaninNotlari"] || null,
+    davaninOzeti: infos["davaninOzeti"] || null,
+    gelisNedeni: infos["gelisNedeni"] || infos["gelisNedeniStr"] || null,
+    karar: infos["karar"] || null,
+    kararNo: infos["kararNo"] || infos["karar_no"] || null,
+    kararTarihi: infos["kararTarihi"] ? dayjs(infos["kararTarihi"], "DD/MM/YYYY HH:mm").toDate() : null,
+    savunmaninOzeti: infos["savunmaninOzeti"] || null,
+    ydYapildi: infos["ydYapildi"] === "Evet" || infos["YD Yapıldı"] === "Evet",
+    yurutmeDurdurmali: infos["yurutmeDurdurmali"] === "Evet" || infos["Yürütme Durdurmalı"] === "Evet",
+
+    // İcra Takip
+    takibinTuru: infos["takibinTuru"] || null,
+    takibinSekli: infos["takibinSekli"] || null,
+    takibinYolu: infos["takibinYolu"] || null,
+    alacakKalemToplamTutar: infos["alacakKalemToplamTutar"] ?? null,
+    alacakKalemFaizTutar: infos["alacakKalemFaizTutar"] ?? null,
+    takipSonrasiMasraf: infos["takipSonrasiMasraf"] ?? null,
+    vekaletUcreti: infos["vekaletUcreti"] ?? null,
+    tahsilHarci: infos["tahsilHarci"] ?? null,
+    yapilmisBorcTahsilati: infos["yapilmisBorcTahsilati"] ?? null,
+    takibinTuruAciklama: infos["takibinTuruAciklama"] || null,
+    takibinSekliAciklama: infos["takibinSekliAciklama"] || null,
+    takibinYoluAciklama: infos["takibinYoluAciklama"] || null,
+
+    // Diğer Alanlar
+    sonuc: infos["sonuc"] ?? false,
+    isCompressed: infos["isCompressed"] ?? false,
+    isMock: infos["isMock"] ?? false
+  };
 }

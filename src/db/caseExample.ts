@@ -9,7 +9,7 @@ export const case_example = pgTable('case_example',
     {
         id : serial('id').primaryKey(),
         userId: uuid('user_id').notNull().references(() => users.id),
-        esasNo : varchar('esas_no', {length : 40}).unique().notNull(),
+        esasNo : varchar('esas_no', {length : 40}).notNull(),
         oldEsasNo: text('old_esas_no').array().notNull().default(sql`ARRAY[]::text[]`),
         description : varchar('description').notNull(),
         court : varchar('court').notNull(),
