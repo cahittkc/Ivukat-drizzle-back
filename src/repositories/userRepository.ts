@@ -34,6 +34,24 @@ export class UserRepository {
     return result[0];
   }
 
+  async findByIdForSession(id: string): Promise<User | undefined> {
+    const result = await this.db.select(
+        {
+            id: users.id,
+            username: users.username,
+            email: users.email,
+            firstName : users.firstName,
+            middleName : users.middleName,
+            lastName : users.lastName,
+            isVerified: users.isVerified,
+            createdAt : users.createdAt,
+            deletedAt : users.deletedAt
+            
+        }
+    ).from(users).where(eq(users.id, id)).limit(1);
+    return result[0];
+  }
+
   async findByUsername(username : string): Promise<User | undefined> {
     const result = await this.db.select(
         {

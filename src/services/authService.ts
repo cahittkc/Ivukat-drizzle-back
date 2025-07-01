@@ -90,6 +90,15 @@ export class AuthService {
         return fullUser;
     }
 
+
+    async session(userId : string){
+        const result = await this.userRepository.findByIdForSession(userId)
+        if(!result){
+            throw ApiError.badRequest('User not found')
+        }
+        return result;
+    }
+
     async refreshToken(token : string, req : Request){
         const decodedToken = jwt.verify(token, JWT_SECRET) as { sessionId : string };
         if(!decodedToken){
@@ -139,15 +148,22 @@ export class AuthService {
 
 
     async logout(token : string){
-        const decodedToken = jwt.verify(token, JWT_SECRET) as { sessionId : string };
-        if(!decodedToken){
-            throw ApiError.unauthorized('Invalid token');
+        try {
+            const decodedToken = jwt.decode(token) as { sessionId : string };
+            if(!decodedToken){
+                throw ApiError.unauthorized('Invalid token');
+            }
+            const refreshToken = await this.refreshTokenRepository.findBySessionId(decodedToken.sessionId);
+            if(!refreshToken){
+                throw ApiError.unauthorized('Invalid token');
+            }
+            await this.refreshTokenRepository.invalidateSession(refreshToken.sessionId);
+        } catch (err) {
+            if (err.name === 'TokenExpiredError') {
+                throw ApiError.unauthorized('Token expired');
+            }
+            throw ApiError.internal('Internal server error');
         }
-        const refreshToken = await this.refreshTokenRepository.findBySessionId(decodedToken.sessionId);
-        if(!refreshToken){
-            throw ApiError.unauthorized('Invalid token');
-        }
-        await this.refreshTokenRepository.invalidateSession(refreshToken.sessionId);
     }
     
 

@@ -32,6 +32,28 @@ export class AuthController{
     }
 
 
+    session = async (req: Request, res: Response, next : NextFunction) => {
+        const authHeader = req.headers.authorization
+        if (!authHeader) {
+            return next(new ApiError(StatusCodes.UNAUTHORIZED, 'No authorization header provided'));
+        }
+        const token = authHeader.split(' ')[1]; // Bearer <token>
+        if (!token) {
+            return next(new ApiError(StatusCodes.UNAUTHORIZED, 'Invalid token format'));
+        }
+
+        const decodedToekn = AuthService.verifyToken(token)
+
+        if(!decodedToekn){
+            return next(new ApiError(StatusCodes.UNAUTHORIZED, 'Invalid token format'));
+        }
+
+        const user = await this.authService.session(decodedToekn.id)
+
+        successResponse(res, user, 'session verified succesfull', StatusCodes.OK);
+
+    }
+
     register = async (req: Request, res: Response, next : NextFunction) => {
         try {
             const userData = req.body as RegisterDto
