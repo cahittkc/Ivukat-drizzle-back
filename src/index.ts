@@ -4,6 +4,11 @@ import cors from "cors";
 import helmet from "helmet";
 import { logger } from "./middlewares/logger";
 import { errorHandler } from "./middlewares/errorHandler";
+import { drizzle } from "drizzle-orm/node-postgres";
+import { Pool } from "pg";
+import * as schemas from "./db/schema"
+
+
 import userRoutes from "./routes/userRoutes";
 import authRoutes from "./routes/authRoutes"
 import judgmentTypeRoutes from "./routes/judgmentTypeRoutes"
@@ -11,11 +16,10 @@ import customRoutes from "./routes/customRoutes"
 import judgmentUnitRoutes from "./routes/judgmentUnitRoutes" 
 import caseRoutes from "./routes/caseRoutes"
 import partiesRoutes from "./routes/partiesRoutes"
+import clientsRoutes from "./routes/clientsRoutes"
 
 
-import { drizzle } from "drizzle-orm/node-postgres";
-import { Pool } from "pg";
-import * as schemas from "./db/schema"
+
 
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL!,
@@ -67,6 +71,7 @@ app.use("/api/customs", customRoutes)
 app.use("/api/judgment-unit", judgmentUnitRoutes)
 app.use("/api/cases",caseRoutes)
 app.use("/api/parties",partiesRoutes)
+app.use("/api/clients",clientsRoutes)
 
 app.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);
