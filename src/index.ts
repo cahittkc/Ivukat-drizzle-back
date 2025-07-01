@@ -10,6 +10,7 @@ import judgmentTypeRoutes from "./routes/judgmentTypeRoutes"
 import customRoutes from "./routes/customRoutes"
 import judgmentUnitRoutes from "./routes/judgmentUnitRoutes" 
 import caseRoutes from "./routes/caseRoutes"
+import partiesRoutes from "./routes/partiesRoutes"
 
 
 import { drizzle } from "drizzle-orm/node-postgres";
@@ -65,6 +66,7 @@ app.use("/api/judgment-types", judgmentTypeRoutes)
 app.use("/api/customs", customRoutes)
 app.use("/api/judgment-unit", judgmentUnitRoutes)
 app.use("/api/cases",caseRoutes)
+app.use("/api/parties",partiesRoutes)
 
 app.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);
