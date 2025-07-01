@@ -2,6 +2,7 @@ import { eq, InferSelectModel, InferInsertModel, inArray } from "drizzle-orm";
 import {case_example} from "../db/caseExample"
 import { parties_example } from "../db/partiesExample";
 import { clients } from "../db/clients";
+import { caseInfos } from "../db/caseInfo";
 
 
 type CaseExample = InferSelectModel<typeof case_example>
@@ -16,10 +17,14 @@ export class CaseRepository {
         this.db = dbInstance;
     }
 
-
-
     async getCaseByUserId(userId : string){
         const result = await this.db.select().from(case_example).where(eq(case_example.userId, userId));
         return result;
+    }
+
+
+    async getCaseInfo(caseNo : string){
+        const result = await this.db.select().from(caseInfos).where(eq(caseInfos.dosyaNo, caseNo))
+        return result[0];
     }
 }

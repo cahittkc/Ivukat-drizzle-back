@@ -26,5 +26,15 @@ export class CaseController{
         }
     }
 
+    getCaseInfo = async (req : Request , res : Response , next : NextFunction) => {
+        try {
+            const caseNo = req.body.caseNo
+            const result = await this.repository.getCaseInfo(caseNo)
+            successResponse(res,result, 'Dava bilgileri başarıyla listelendi', StatusCodes.OK)
+        } catch (error) {
+            next(error)
+        }
+    }
+
 
 }
