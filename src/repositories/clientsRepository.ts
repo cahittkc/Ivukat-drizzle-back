@@ -23,7 +23,10 @@ export class ClientRepository {
     async getClientsByUserIdPaginated(data: any) {
         const offset = (data.page - 1) * data.pageSize;
         const result = await this.db
-            .select()
+            .select({
+                fullName : clients.fullName,
+                caseNo : clients.caseNo
+            })
             .from(clients)
             .where(eq(clients.userId, data.userId))
             .limit(data.pageSize)
