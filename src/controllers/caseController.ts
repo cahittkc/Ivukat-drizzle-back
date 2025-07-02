@@ -3,23 +3,24 @@ import { CaseRepository } from "../repositories/caseRepository";
 import { db } from "../db";
 import { successResponse } from "../utils/responseHandler";
 import { StatusCodes } from "http-status-codes";
+import { CaseService } from "../services/caseService";
+import { ApiError } from "../utils/ApiError";
 
 
 
 
 
 export class CaseController{
-
-    private repository : CaseRepository
-
+    private caseService : CaseService
+   
     constructor(){
-        this.repository = new CaseRepository(db);
+        this.caseService = new CaseService();
     }
 
     getCaseByUserId = async (req : Request , res : Response , next : NextFunction) => {
         try {
-            const userId = req.body.userId
-            const result = await this.repository.getCaseByUserId(userId)
+            const data = req.body
+            const result = await this.caseService.getCaseByUserIdWithPaginationService(data)
             successResponse(res,result, 'Davalar başarıyla listelendi', StatusCodes.OK)
         } catch (error) {
             next(error)
@@ -29,11 +30,28 @@ export class CaseController{
     getCaseInfo = async (req : Request , res : Response , next : NextFunction) => {
         try {
             const caseNo = req.body.caseNo
-            const result = await this.repository.getCaseInfo(caseNo)
+            const result = await this.caseService.getCaseInfo(caseNo)
             successResponse(res,result, 'Dava bilgileri başarıyla listelendi', StatusCodes.OK)
         } catch (error) {
             next(error)
         }
+    }
+
+
+    searchCase = async (req : Request , res : Response , next : NextFunction) => {
+        try {
+            const data = req.body.searchText as string
+            if(!data){
+                throw ApiError.badRequest('data bulunamadı lütfen uygun şekilde data gönderiniz')
+            }
+            console.log(data);
+            
+            const result = await this.caseService.searchCaseByEsasNoOrCourtLikeService(data)
+            successResponse(res,result, 'Aranılan dava bilgileri listelendi', StatusCodes.OK)
+        } catch (error) {
+            next(error)
+        }
+
     }
 
 
