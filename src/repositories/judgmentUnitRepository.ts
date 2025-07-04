@@ -23,6 +23,8 @@ export class JudgmentUnitRepository {
             uyapId : judgment_units.uyapId,
             name : judgment_units.name
         }).from(judgment_units).where(eq(judgment_units.judgmentTypeUyapId,id))
+
+        
         return result;
     }
 }

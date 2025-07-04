@@ -1,4 +1,4 @@
-import { eq, InferSelectModel, InferInsertModel, inArray,sql , or } from "drizzle-orm";
+import { eq, InferSelectModel, InferInsertModel, inArray,sql , or, and } from "drizzle-orm";
 import {case_example} from "../db/caseExample"
 import { parties_example } from "../db/partiesExample";
 import { clients } from "../db/clients";
@@ -29,25 +29,46 @@ export class CaseRepository {
     }
 
 
-    async getCaseByUserIdWithPagination(data : any){
+    async getCasesByUserIdWithPagination(data: {
+        userId: string;
+        page: number;
+        pageSize: number;
+        judgmentTypeId?: string;
+        judmentUnitUyapId?: string;
+    }) {
         const offset = (data.page - 1) * data.pageSize;
+        
+        // Where koşullarını array'de topla
+        const whereConditions = [eq(case_example.userId, data.userId)];
+        
+        // Eğer judgmentTypeId varsa ekle
+        if (data.judgmentTypeId) {
+            whereConditions.push(eq(case_example.judgmentTypeId, data.judgmentTypeId));
+        }
+        
+        // Eğer judmentUnitUyapId varsa ekle
+        if (data.judmentUnitUyapId) {
+            whereConditions.push(eq(case_example.judgmentUnitUyapId, data.judmentUnitUyapId));
+        }
+        
         const result = await this.db
             .select()
             .from(case_example)
-            .where(eq(case_example.userId, data.userId))
+            .where(and(...whereConditions))
             .limit(data.pageSize)
             .offset(offset);
-
-        // Toplam kayıt sayısı (opsiyonel, frontend için faydalı)
-        const countResult = await this.db.select({ count: sql`count(*)`.mapWith(Number) }).from(case_example);
-
-        console.log("countResult",countResult);
-
+        
+        // Toplam kayıt sayısı için aynı koşulları kullan
+        const countResult = await this.db
+            .select({ count: sql`count(*)`.mapWith(Number) })
+            .from(case_example)
+            .where(and(...whereConditions));
+        
         return {
             data: result,
-            total : countResult[0].count,
-            page : data.page,
-            pageSize : data.pageSize
+            total: countResult[0].count,
+            page: data.page,
+            pageSize: data.pageSize
         };
     }
 
@@ -59,14 +80,18 @@ export class CaseRepository {
         const normalizedSearch = this.normalizeTR(searchText.replace(/\s/g, ''));
         const likePattern = `%${normalizedSearch}%`;
 
-        // SQL'de: boşlukları kaldır, küçük harfe çevir, Türkçe büyük İ'yi küçük i'ye çevir
+        // SQL'de: boşlukları kaldır, küçük harfe çevir, Türkçe karakterleri normalize et
         const result = await this.db
             .select()
             .from(case_example)
             .where(
                 or(
-                    sql`REPLACE(REPLACE(LOWER(REPLACE(${case_example.esasNo}, ' ', '')), 'ı', 'i'), 'İ', 'i') LIKE ${likePattern}`,
-                    sql`REPLACE(REPLACE(LOWER(REPLACE(${case_example.court}, ' ', '')), 'ı', 'i'), 'İ', 'i') LIKE ${likePattern}`
+                    sql`
+                        REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(LOWER(REPLACE(${case_example.esasNo}, ' ', '')), 'ı', 'i'), 'İ', 'i'), 'ü', 'u'), 'Ü', 'u'), 'ö', 'o'), 'ç', 'c'), 'ş', 's') LIKE ${likePattern}
+                    `,
+                    sql`
+                        REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(LOWER(REPLACE(${case_example.court}, ' ', '')), 'ı', 'i'), 'İ', 'i'), 'ü', 'u'), 'Ü', 'u'), 'ö', 'o'), 'ç', 'c'), 'ş', 's') LIKE ${likePattern}
+                    `
                 )
             );
             
@@ -81,8 +106,9 @@ export class CaseRepository {
             .replace(/ı/g, 'i')
             .replace(/ş/g, 's')
             .replace(/ğ/g, 'g')
-            .replace(/ü/g, 'u')
             .replace(/ö/g, 'o')
-            .replace(/ç/g, 'c');
+            .replace(/ç/g, 'c')
+            .replace(/ü/g, 'u')
+            .replace(/Ü/g, 'u');
     }
 }

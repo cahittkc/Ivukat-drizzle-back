@@ -28,7 +28,7 @@ export class CaseService{
             throw ApiError.badRequest('User not found')
         }
 
-        const result = await this.caseRepository.getCaseByUserIdWithPagination(data)
+        const result = await this.caseRepository.getCasesByUserIdWithPagination(data)
 
         return result;
     }
