@@ -17,6 +17,7 @@ import judgmentUnitRoutes from "./routes/judgmentUnitRoutes"
 import caseRoutes from "./routes/caseRoutes"
 import partiesRoutes from "./routes/partiesRoutes"
 import clientsRoutes from "./routes/clientsRoutes"
+import hearingRoutes from "./routes/hearingRoutes"
 
 
 
@@ -72,6 +73,7 @@ app.use("/api/judgment-unit", judgmentUnitRoutes)
 app.use("/api/cases",caseRoutes)
 app.use("/api/parties",partiesRoutes)
 app.use("/api/clients",clientsRoutes)
+app.use('/api/hearings', hearingRoutes)
 
 app.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);
