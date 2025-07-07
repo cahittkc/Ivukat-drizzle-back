@@ -15,6 +15,7 @@ export async function hearingAndPartiesAdd(data:any) {
     
     return await db.transaction(async (trx) => {
         // Kullanıcı kontrolü
+        
         const user = await trx.select().from(users).where(eq(users.id, data.userId)).limit(1);
         if (!user[0]) {
             throw new Error("User not found");
