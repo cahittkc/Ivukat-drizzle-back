@@ -72,26 +72,33 @@ export class CaseRepository {
         };
     }
 
-    async searchCaseByEsasNoOrCourtLike(searchText: string) {
-        if (!searchText) {
+    async searchCaseByEsasNoOrCourtLike(data:any) {
+        if (!data.searchText) {
             throw new Error('Search text not found');
         }
         // Arama stringini normalize et
-        const normalizedSearch = this.normalizeTR(searchText.replace(/\s/g, ''));
+        const normalizedSearch = this.normalizeTR(data.searchText.replace(/\s/g, ''));
         const likePattern = `%${normalizedSearch}%`;
+
+
+        console.log("====>>>>",data);
+        
 
         // SQL'de: boşlukları kaldır, küçük harfe çevir, Türkçe karakterleri normalize et
         const result = await this.db
             .select()
             .from(case_example)
             .where(
-                or(
-                    sql`
-                        REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(LOWER(REPLACE(${case_example.esasNo}, ' ', '')), 'ı', 'i'), 'İ', 'i'), 'ü', 'u'), 'Ü', 'u'), 'ö', 'o'), 'ç', 'c'), 'ş', 's') LIKE ${likePattern}
-                    `,
-                    sql`
-                        REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(LOWER(REPLACE(${case_example.court}, ' ', '')), 'ı', 'i'), 'İ', 'i'), 'ü', 'u'), 'Ü', 'u'), 'ö', 'o'), 'ç', 'c'), 'ş', 's') LIKE ${likePattern}
-                    `
+                and(
+                    eq(case_example.userId, data.userId),
+                    or(
+                        sql`
+                            REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(LOWER(REPLACE(${case_example.esasNo}, ' ', '')), 'ı', 'i'), 'İ', 'i'), 'ü', 'u'), 'Ü', 'u'), 'ö', 'o'), 'ç', 'c'), 'ş', 's') LIKE ${likePattern}
+                        `,
+                        sql`
+                            REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(LOWER(REPLACE(${case_example.court}, ' ', '')), 'ı', 'i'), 'İ', 'i'), 'ü', 'u'), 'Ü', 'u'), 'ö', 'o'), 'ç', 'c'), 'ş', 's') LIKE ${likePattern}
+                        `
+                    )
                 )
             );
             

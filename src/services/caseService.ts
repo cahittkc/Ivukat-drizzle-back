@@ -40,14 +40,20 @@ export class CaseService{
     }
 
 
-    async searchCaseByEsasNoOrCourtLikeService(searchText : string){
-        if(!searchText){
+    async searchCaseByEsasNoOrCourtLikeService(data : {searchText : string, userId : string}){
+        if(!data.searchText){
             throw  ApiError.badRequest('Search text not found')
         }
 
-        const noSpacesText = searchText.replace(/\s/g, "");
+        const noSpacesText = data.searchText.replace(/\s/g, "");
 
-        const result = await this.caseRepository.searchCaseByEsasNoOrCourtLike(noSpacesText)
+        let newData = {
+            searchText : noSpacesText,
+            userId : data.userId
+        }
+
+
+        const result = await this.caseRepository.searchCaseByEsasNoOrCourtLike(newData)
 
         return result;
 

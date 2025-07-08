@@ -40,12 +40,10 @@ export class CaseController{
 
     searchCase = async (req : Request , res : Response , next : NextFunction) => {
         try {
-            const data = req.body.searchText as string
+            const data = req.body
             if(!data){
                 throw ApiError.badRequest('data bulunamadı lütfen uygun şekilde data gönderiniz')
             }
-            console.log(data);
-            
             const result = await this.caseService.searchCaseByEsasNoOrCourtLikeService(data)
             successResponse(res,result, 'Aranılan dava bilgileri listelendi', StatusCodes.OK)
         } catch (error) {
