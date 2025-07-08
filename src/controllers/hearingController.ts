@@ -23,4 +23,15 @@ export class HearingController{
             next(error)
         }
     }
+
+
+    getHearings = async (req: Request, res : Response , next : NextFunction) => {
+        try {
+            const data = req.body
+            const result = await this.hearingRepository.getHearings(data)
+            successResponse(res,result, 'Duruşmalar başarıyla listelendi')
+        } catch (error) {
+            next(error)
+        }
+    }
 }

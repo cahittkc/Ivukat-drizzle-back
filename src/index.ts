@@ -4,9 +4,7 @@ import cors from "cors";
 import helmet from "helmet";
 import { logger } from "./middlewares/logger";
 import { errorHandler } from "./middlewares/errorHandler";
-import { drizzle } from "drizzle-orm/node-postgres";
-import { Pool } from "pg";
-import * as schemas from "./db/schema"
+import "./jobs/hearingForEmailScheduler"
 
 
 import userRoutes from "./routes/userRoutes";
@@ -22,12 +20,6 @@ import emailRoutes from "./routes/emailRoutes"
 
 
 
-
-const pool = new Pool({
-  connectionString: process.env.DATABASE_URL!,
-});
-
-const db = drizzle(pool, { schema: { ...schemas } });
 
 const app = express();
 const PORT = process.env.PORT || 3000;

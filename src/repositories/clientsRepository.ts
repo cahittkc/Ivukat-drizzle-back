@@ -21,28 +21,30 @@ export class ClientRepository {
     }
 
     async getClientsByUserIdPaginated(data: any) {
-        const offset = (data.page - 1) * data.pageSize;
+        const page = Math.max(1, Number(data.page) || 1);
+        const pageSize = Math.max(1, Number(data.pageSize) || 10);
+        const offset = (page - 1) * pageSize;
+    
         const result = await this.db
             .select({
-                fullName : clients.fullName,
-                caseNo : clients.caseNo
+                fullName: clients.fullName,
+                caseNo: clients.caseNo
             })
             .from(clients)
             .where(eq(clients.userId, data.userId))
-            .limit(data.pageSize)
+            .limit(pageSize)
             .offset(offset);
-
-        // Toplam kayıt sayısı (opsiyonel, frontend için faydalı)
-        const countResult = await this.db.select({ count: sql`count(*)`.mapWith(Number) }).from(clients);
-
-        console.log("countResult",countResult);
-        
-
+    
+        const countResult = await this.db
+            .select({ count: sql`count(*)`.mapWith(Number) })
+            .from(clients)
+            .where(eq(clients.userId, data.userId));
+    
         return {
             data: result,
-            total : countResult[0].count,
-            page : data.page,
-            pageSize : data.pageSize
+            total: countResult[0].count,
+            page,
+            pageSize
         };
     }
 }

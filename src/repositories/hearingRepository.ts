@@ -1,7 +1,7 @@
 import { InferSelectModel } from "drizzle-orm"
 import { hearing } from "../db/hearing"
 import { hearing_parties } from "../db/hearingParties"
-import { eq } from "drizzle-orm"
+import { eq, and, gte, lte } from "drizzle-orm"
 
 type SelectHearing = InferSelectModel<typeof hearing>
 type SelectHearingParties = InferSelectModel<typeof hearing_parties>
@@ -83,13 +83,21 @@ export class HearingRepository {
     }
 
     // Sadece hearing'leri çekmek için (parties olmadan)
-    async getHearings(userId: string) {
+    async getHearings(data: { userId: string; startDate: string; endDate: string }) {
         try {
-            return await this.db
+            let query = this.db
                 .select()
                 .from(hearing)
-                .where(eq(hearing.userId, userId))
-                .orderBy(hearing.hearingDate, hearing.hearingId);
+                .where(
+                    and(
+                      eq(hearing.userId, data.userId),
+                      gte(hearing.hearingDate, new Date(data.startDate)),
+                      lte(hearing.hearingDate, new Date(data.endDate))
+                    )
+                  );
+
+            
+            return await query.orderBy(hearing.hearingDate, hearing.hearingId);
         } catch (error) {
             console.error('Error fetching hearings:', error);
             throw error;
