@@ -1,4 +1,4 @@
-import { eq, InferSelectModel, InferInsertModel, inArray,sql , or, and } from "drizzle-orm";
+import { eq, InferSelectModel, InferInsertModel, inArray,sql , or, and} from "drizzle-orm";
 import {case_example} from "../db/caseExample"
 import { parties_example } from "../db/partiesExample";
 import { clients } from "../db/clients";
@@ -77,14 +77,12 @@ export class CaseRepository {
             throw new Error('Search text not found');
         }
         // Arama stringini normalize et
-        const normalizedSearch = this.normalizeTR(data.searchText.replace(/\s/g, ''));
+        const normalizedSearch = this.normalizeStr(data.searchText.replace(/\s/g, ''));
         const likePattern = `%${normalizedSearch}%`;
 
-
         console.log("====>>>>",data);
-        
 
-        // SQL'de: boşlukları kaldır, küçük harfe çevir, Türkçe karakterleri normalize et
+        // Normalized alanlar üzerinden arama yap
         const result = await this.db
             .select()
             .from(case_example)
@@ -92,12 +90,8 @@ export class CaseRepository {
                 and(
                     eq(case_example.userId, data.userId),
                     or(
-                        sql`
-                            REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(LOWER(REPLACE(${case_example.esasNo}, ' ', '')), 'ı', 'i'), 'İ', 'i'), 'ü', 'u'), 'Ü', 'u'), 'ö', 'o'), 'ç', 'c'), 'ş', 's') LIKE ${likePattern}
-                        `,
-                        sql`
-                            REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(LOWER(REPLACE(${case_example.court}, ' ', '')), 'ı', 'i'), 'İ', 'i'), 'ü', 'u'), 'Ü', 'u'), 'ö', 'o'), 'ç', 'c'), 'ş', 's') LIKE ${likePattern}
-                        `
+                        sql`${case_example.normalizedEsasno} LIKE ${likePattern}`,
+                        sql`${case_example.normalizedCourt} LIKE ${likePattern}`
                     )
                 )
             );
@@ -105,10 +99,11 @@ export class CaseRepository {
         return result;
     }
 
-    private normalizeTR(str: string): string {
+    private normalizeStr(str: string): string {
         return str
             .toLocaleLowerCase('tr-TR')
             .normalize('NFKD')
+            .replace(/\s/g, '')
             .replace(/[\u0300-\u036f]/g, '')
             .replace(/ı/g, 'i')
             .replace(/ş/g, 's')

@@ -63,6 +63,8 @@ export async function addCaseWithParties(data: any) {
       caseTypeCode : data['dosyaTurKod'],
       judgmentUnitUyapId : data['birimTuru2'],
       judgmentTypeId : judgmetUnit.judgmentTypeUyapId,
+      normalizedEsasno : normalizeStr(data['esas-no']),
+      normalizedCourt : normalizeStr(data.mahkeme),
       caseClients: [] // ilk başta boş
     }).returning();
 
@@ -123,7 +125,8 @@ export async function addCaseWithParties(data: any) {
 function normalizeTR(str: string) {
   return str
     .toLocaleLowerCase('tr-TR') // Türkçe küçük harfe çevir
-    .normalize('NFKD')          // Unicode normalize
+    .normalize('NFKD')  
+    .replace(/\s/g, '')        // Unicode normalize
     .replace(/[\u0300-\u036f]/g, '') // Kombine karakterleri sil
     .replace(/ı/g, 'i')         // Türkçe "ı" harfini "i" yap
     .replace(/ş/g, 's')
@@ -131,6 +134,21 @@ function normalizeTR(str: string) {
     .replace(/ü/g, 'u')
     .replace(/ö/g, 'o')
     .replace(/ç/g, 'c');
+}
+
+function normalizeStr(str: string): string {
+  return str
+      .toLocaleLowerCase('tr-TR')
+      .normalize('NFKD')
+      .replace(/\s/g, '')
+      .replace(/[\u0300-\u036f]/g, '')
+      .replace(/ı/g, 'i')
+      .replace(/ş/g, 's')
+      .replace(/ğ/g, 'g')
+      .replace(/ö/g, 'o')
+      .replace(/ç/g, 'c')
+      .replace(/ü/g, 'u')
+      .replace(/Ü/g, 'u');
 }
 
 function mapCaseInfosToDbFields(infos: any, dosya_no :string) {
