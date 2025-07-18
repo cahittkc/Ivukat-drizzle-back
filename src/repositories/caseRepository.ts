@@ -23,10 +23,25 @@ export class CaseRepository {
     }
 
 
-    async getCaseInfo(caseNo : string){
-        const result = await this.db.select().from(caseInfos).where(eq(caseInfos.dosyaNo, caseNo))
-        return result[0];
+    async getCaseInfo(caseNo: string) {
+        const [caseRow] = await this.db
+          .select()
+          .from(case_example)
+          .where(eq(case_example.caseNo, caseNo));
+      
+        if (!caseRow) return null;
+      
+        const [caseDetail] = await this.db
+          .select()
+          .from(caseInfos)
+          .where(eq(caseInfos.dosyaNo, caseNo));
+      
+        return {
+          ...caseRow,
+          details: caseDetail || null,
+        };
     }
+      
 
 
     async getCasesByUserIdWithPagination(data: {
