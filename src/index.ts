@@ -17,6 +17,7 @@ import partiesRoutes from "./routes/partiesRoutes"
 import clientsRoutes from "./routes/clientsRoutes"
 import hearingRoutes from "./routes/hearingRoutes"
 import emailRoutes from "./routes/emailRoutes"
+import calendarRoutes from "./routes/calendarRoutes"
 
 
 
@@ -68,6 +69,7 @@ app.use("/api/parties",partiesRoutes)
 app.use("/api/clients",clientsRoutes)
 app.use('/api/hearings', hearingRoutes)
 app.use('/api/email',emailRoutes)
+app.use('/api/calendar',calendarRoutes)
 
 app.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);
