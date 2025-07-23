@@ -12,7 +12,7 @@ export const validate =
       const path = err.errors?.[0]?.path?.join('.') || '';
       next(ApiError.badRequest(
         path
-          ? `${path} field is ${err.errors?.[0]?.message}`
+          ? `${err.errors?.[0]?.message}`
           : err.errors?.[0]?.message || "Geçersiz veri"
       ));
     }
