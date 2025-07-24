@@ -22,4 +22,14 @@ export class CustomerController{
             next(error)
         }
     }
+
+    getCustomersByUserId = async (req: Request,res : Response, next : NextFunction) => {
+        try {
+            const data = req.body
+            const result = await this.customerService.getCustomersByUserId(data)
+            successResponse(res,result, 'Customer added succesfully', StatusCodes.OK)
+        } catch (error) {
+            next(error)
+        }
+    }
 }

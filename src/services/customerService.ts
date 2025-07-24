@@ -78,4 +78,14 @@ export class CustomerService {
         const result = await this.customerRepository.create(data)
         return result;
     }
+
+    async getCustomersByUserId(data){
+        const user = this.userRepository.findById(data.userId)
+        if(!user){
+          throw ApiError.badRequest('User not found'); 
+        }
+
+        const result = await this.customerRepository.getCustomersByUserId(data)
+        return result
+    }
 }
