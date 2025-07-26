@@ -27,7 +27,17 @@ export class CustomerController{
         try {
             const data = req.body
             const result = await this.customerService.getCustomersByUserId(data)
-            successResponse(res,result, 'Customer added succesfully', StatusCodes.OK)
+            successResponse(res,result, 'Customers information was retrieved successfully', StatusCodes.OK)
+        } catch (error) {
+            next(error)
+        }
+    }
+
+    getCustomerById = async (req : Request, res : Response, next : NextFunction) => {
+        try {
+            const {customerId} = req.params
+            const result = await this.customerService.getCustomerById(customerId)
+            successResponse(res,result,'customer information was retrieved successfully',StatusCodes.OK)
         } catch (error) {
             next(error)
         }

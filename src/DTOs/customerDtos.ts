@@ -12,7 +12,7 @@ export const newCustomerSchema = z.object({
     lastName : z.string().min(3, "Soyad en az 3 karakter olmalı").max(40, "Soyad en fazla 40 karakter olabilir").nullable().optional(),
     companyName : z.string().min(3, "Kurum adı en az 3 karakter olmalı").max(255, "Kurum adı en fazla 40 karakter olabilir").nullable().optional(),
     customerType : customerTypeEnum,
-    identityNumber : z.string().regex(/^\d{11}$/, 'Vergi numarası 11 haneli rakamlardan oluşmalıdır').nullable().optional(),
+    identityNumber : z.string().regex(/^\d{11}$/, 'Tc kimlik numarası 11 haneli rakamlardan oluşmalıdır').nullable().optional(),
     taxNumber : z.string().regex(/^\d{10}$/, 'Vergi numarası 10 haneli rakamlardan oluşmalıdır').nullable().optional(),
     caseNumber: z.array(z.string()).optional(),
     normalizeName : z.string().optional(),

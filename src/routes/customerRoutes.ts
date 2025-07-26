@@ -12,6 +12,7 @@ const controller = new CustomerController()
 
 router.post('/add-customer', authenticate, validate(newCustomerSchema), controller.createCustomer)
 router.post('/get-customers', authenticate, controller.getCustomersByUserId)
+router.get('/get-customer/:customerId', authenticate, controller.getCustomerById)
 
 
 

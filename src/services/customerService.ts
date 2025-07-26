@@ -88,4 +88,15 @@ export class CustomerService {
         const result = await this.customerRepository.getCustomersByUserId(data)
         return result
     }
+
+
+    async getCustomerById(customerId : string){
+        const customer = await this.customerRepository.getCustomerById(customerId)
+
+        if(!customer){
+          throw ApiError.badRequest('Customer not found')
+        }
+
+        return customer;
+    }
 }

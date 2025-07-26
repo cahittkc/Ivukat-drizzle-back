@@ -16,9 +16,6 @@ export class CustomController{
             this.caseRepository = new CaseRepository(db);
         }
 
-
-
-
         addCaseAndParties = async (req : Request, res : Response, next : NextFunction) => {
             try {
                 const data = req.body
@@ -38,4 +35,7 @@ export class CustomController{
                 next(error)
             }
         }
+
+
+        
 }
