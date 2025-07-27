@@ -5,10 +5,10 @@ import { case_example } from "./caseExample";
 
 
 export const customerCases = pgTable('customer_cases', {
-        customerId : uuid('customer_id').references(() => customer.id),
-        caseNo : varchar('case_no').references(() => case_example.caseNo)
+        customerId : uuid('customer_id').notNull().references(() => customer.id),
+        caseNo : varchar('case_no').notNull().references(() => case_example.caseNo)
     }, (t) => ({
-        pk: primaryKey(t.customerId, t.caseNo),
+        pk: primaryKey({ columns: [t.customerId, t.caseNo] }),
     })
 
 )

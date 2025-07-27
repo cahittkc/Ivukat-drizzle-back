@@ -20,6 +20,7 @@ import emailRoutes from "./routes/emailRoutes"
 import calendarRoutes from "./routes/calendarRoutes"
 import customerRoutes from "./routes/customerRoutes"
 import customerCasesRoutes from "./routes/customerCasesRoutes"
+import uploadedFileRoutes from "./routes/uploadedFileRoutes"
 
 
 
@@ -74,6 +75,7 @@ app.use('/api/email',emailRoutes)
 app.use('/api/calendar',calendarRoutes)
 app.use('/api/customers', customerRoutes)
 app.use('/api/customer-cases', customerCasesRoutes)
+app.use('/api/files',uploadedFileRoutes)
 
 app.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);

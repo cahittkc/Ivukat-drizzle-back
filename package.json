@@ -32,6 +32,7 @@
     "zod": "^3.25.67"
   },
   "dependencies": {
+    "@aws-sdk/client-s3": "^3.850.0",
     "@sendgrid/mail": "^8.1.5",
     "@types/cors": "^2.8.19",
     "@types/express": "^5.0.3",
@@ -44,6 +45,7 @@
     "express": "^5.1.0",
     "http-status-codes": "^2.3.0",
     "jsonwebtoken": "^9.0.2",
+    "multer": "^2.0.2",
     "node-cron": "^4.2.0",
     "pg": "^8.16.2"
   }
