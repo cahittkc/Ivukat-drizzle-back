@@ -12,6 +12,7 @@ const controller = new UploadedFileController()
 
 router.post("/upload", upload.single("file"), controller.uploadAndSave);
 router.post('/get-customer-files', authenticate, controller.getCustomerFiles)
+router.post('/dowloand-file', authenticate, controller.dowloandFile)
 
 
 

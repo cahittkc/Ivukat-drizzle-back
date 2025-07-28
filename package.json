@@ -33,6 +33,7 @@
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.850.0",
+    "@aws-sdk/s3-request-presigner": "^3.850.0",
     "@sendgrid/mail": "^8.1.5",
     "@types/cors": "^2.8.19",
     "@types/express": "^5.0.3",

@@ -3,6 +3,8 @@ import { db } from "../db";
 import { UploadedFileRepository } from "../repositories/uploadedFileRepository";
 import { CustomerRepository } from "../repositories/customerRepository"
 import { ApiError } from "../utils/ApiError";
+import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
+import { S3Client, GetObjectCommand } from '@aws-sdk/client-s3';
 
 interface UploadFileDTO {
   userId: string;
@@ -11,6 +13,8 @@ interface UploadFileDTO {
   fileUrl: string;
   description?: string;
 }
+
+const s3 = new S3Client({ region: process.env.AWS_REGION });
 
 export class UploadedFileService {
   private repository: UploadedFileRepository;
@@ -23,6 +27,22 @@ export class UploadedFileService {
 
   async uploadFile(data: UploadFileDTO) {
     return await this.repository.create(data);
+  }
+
+  async generatePresignedUrl(data : any) {
+
+    const customer = this.customerRepository.getCustomerById(data.customerId)
+    if(!customer){
+      throw ApiError.badRequest('Customer not found')
+    }
+
+    const command = new GetObjectCommand({
+      Bucket: process.env.S3_BUCKET_NAME,
+      Key: data.key,
+    });
+  
+    const url = await getSignedUrl(s3, command, { expiresIn: 60 * 5 }); // 5 dakika geçerli
+    return url;
   }
 
   async listFilesByCustomer(customerId: string) {

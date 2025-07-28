@@ -86,6 +86,16 @@ export class UploadedFileController {
     }
   }
 
+  dowloandFile = async (req : Request, res : Response, next : NextFunction) => {
+    try {
+        const data = req.body
+        const result = await this.service.generatePresignedUrl(data)
+        successResponse(res,result,'', StatusCodes.OK)
+    } catch (error) {
+      next(error)
+    }
+  }
+
 
 
 }
